@@ -200,7 +200,7 @@ Open and concatenate multiple NetCDF files along the time dimension for a specif
 data_dict = open_mfdataset(["file1.nc", "file2.nc", "file3.nc"], "temperature")
 ```
 """
-function open_mfdataset(files::Vector{String}, variable_name::AbstractString)
+function open_mfdataset(files::Vector{String}, variable_name::AbstractString; time_dim=3)
     # Lists to store variable data, time data, and other coordinate data
     var_data_list = []
     time_data_list = []
@@ -222,7 +222,7 @@ function open_mfdataset(files::Vector{String}, variable_name::AbstractString)
         ds = Dataset(file)
 
         # Store variable and time data
-        push!(var_data_list, ds[variable_name][:])
+        push!(var_data_list, ds[variable_name][:, :, :])
         push!(time_data_list, ds["time"][:])
 
         # Store other coordinate data
@@ -240,7 +240,8 @@ function open_mfdataset(files::Vector{String}, variable_name::AbstractString)
 
     # Concatenate sorted data
     concatenated_data_dict = Dict(
-        variable_name => vcat(sorted_var_data...), "time" => vcat(sorted_time_data...)
+        variable_name => cat(sorted_var_data...; dims=time_dim),
+        "time" => vcat(sorted_time_data...),
     )
 
     # Concatenate coordinate data and add to the dictionary
